@@ -1,7 +1,7 @@
 [build]
   command = "npm run build"
   publish = "dist"
-  timeout = 30  # Adjust timeout as needed
+  timeout = 25  # Increase timeout limit to 25 minutes or higher if necessary
   
 [build.environment]
   NODE_ENV = "production"
@@ -26,4 +26,3 @@
 
 [dev]
   command = "npm run start"  # Development server start command if needed
-  
