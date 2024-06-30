@@ -9,7 +9,7 @@ const authMiddleware = require('../Middleware/authMiddleware'); // Import auth m
 
 
 // Get all users
-router.get('/', authMiddleware, async (req, res) => {
+router.get('/',  async (req, res) => {
   try {
     const users = await User.find().select('-password'); // Exclude password field
     res.send(users);
@@ -20,7 +20,7 @@ router.get('/', authMiddleware, async (req, res) => {
 });
 
 // Get user by ID
-router.get('/:id', authMiddleware, async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password'); 
     if (!user) return res.status(404).send('User not found.');

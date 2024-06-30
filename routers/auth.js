@@ -172,28 +172,34 @@ router.get('/admin/users', authMiddleware, async (req, res) => {
 
 // User login
 router.post('/login', async (req, res) => {
-    try {
-      // Check if the admin exists
-      const admin = await Admin.findOne({ email: req.body.email });
-      if (!admin) return res.status(400).send('Invalid email or password.');
-  
-      // Verify the password with bcrypt
-      const validPassword = await bcrypt.compare(req.body.password, admin.password);
-      if (!validPassword) return res.status(400).send('Invalid email or password.');
-  
-      // Generate tokens for admin
-      const { accessToken, refreshToken } = generateTokens(admin);
-  
-      // Send tokens in response headers and admin details in the body
-      res.header('x-auth-token', accessToken).header('x-refresh-token', refreshToken).send({
-        _id: admin._id,
-        name: admin.name,
-        email: admin.email,
-        role: admin.role,
-      });
-    } catch (error) {
-      console.error('Error during admin login:', error);
-      res.status(500).send('Error during admin login.');
+  try {
+    let user = await Admin.findOne({ email: req.body.email });
+    let isAdmin = true;
+
+    if (!user) {
+      user = await User.findOne({ email: req.body.email });
+      isAdmin = false;
     }
-  });
+
+    if (!user) return res.status(400).send('Invalid email or password.');
+
+    const validPassword = await bcrypt.compare(req.body.password, user.password);
+    if (!validPassword) return res.status(400).send('Invalid email or password.');
+
+    const { accessToken, refreshToken } = generateTokens(user);
+
+    res.header('x-auth-token', accessToken).header('x-refresh-token', refreshToken).send({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      accessToken: accessToken,
+      refreshToken: refreshToken
+    });
+  } catch (error) {
+    console.error('Error during login:', error);
+    res.status(500).send('Error during login.');
+  }
+});
+
 module.exports = router;

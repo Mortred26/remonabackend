@@ -19,6 +19,7 @@ const productRouter = require('./routers/product');
 const userRouter = require("./routers/users")
 const brandRouter = require("./routers/brands")
 const authRouter = require('./routers/auth');
+const adminRouter = require('./routers/admin');
 const api = process.env.API_URL;
 
 app.use(`${api}category`, categoryRouter);
@@ -26,6 +27,7 @@ app.use(`${api}brands`, brandRouter);
 app.use(`${api}products`,  productRouter); 
 app.use(`${api}users`, userRouter);
 app.use(`${api}auth`, authRouter);
+app.use(`${api}admin`, adminRouter);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
