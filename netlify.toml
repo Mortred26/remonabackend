@@ -1,10 +1,12 @@
 [build]
   command = "npm run build"
   publish = "dist"
+timeout = 25  # Increase timeout limit if necessary
 
 [build.environment]
   NODE_ENV = "production"
   MONGODB_URI = "mongodb+srv://IamShadow:IamShadow26@cluster0.nvrqahb.mongodb.net/"
+  
 
 [[redirects]]
   from = "/api/*"
