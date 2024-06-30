@@ -1,11 +1,10 @@
 [build]
-  command = "npm start"  # Replace with your build command if needed
-  publish = "dist"  # Replace with your publish directory if needed
+  command = "npm run build"  # Or whatever your build command should be
+  publish = "dist"
 
-# Environment variables configuration
 [build.environment]
-  NODE_ENV = "production"  # Set your Node environment
-  MONGODB_URI = "mongodb+srv://IamShadow:IamShadow26@cluster0.nvrqahb.mongodb.net/"  # Replace with your MongoDB URI
+  NODE_ENV = "production"
+  MONGODB_URI = "mongodb+srv://IamShadow:IamShadow26@cluster0.nvrqahb.mongodb.net/"
 
 [[redirects]]
   from = "/api/*"
@@ -13,19 +12,16 @@
   status = 200
 
 [context.production.environment]
-  # Production environment variables
   NODE_ENV = "production"
   MONGODB_URI = "mongodb+srv://IamShadow:IamShadow26@cluster0.nvrqahb.mongodb.net/"
 
 [context.deploy-preview.environment]
-  # Deploy preview environment variables
   NODE_ENV = "development"
   MONGODB_URI = "mongodb+srv://IamShadow:IamShadow26@cluster0.nvrqahb.mongodb.net/"
 
 [context.branch-deploy.environment]
-  # Branch deploy environment variables
   NODE_ENV = "development"
   MONGODB_URI = "mongodb+srv://IamShadow:IamShadow26@cluster0.nvrqahb.mongodb.net/"
 
 [dev]
-  command = "npm run start"  # Replace with your development server start command if needed
+  command = "npm run start"  # Development server start command if needed
