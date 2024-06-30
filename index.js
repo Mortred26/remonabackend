@@ -18,14 +18,13 @@ const categoryRouter = require('./routers/category');
 const productRouter = require('./routers/product');
 const userRouter = require("./routers/users")
 const brandRouter = require("./routers/brands")
-const authRouter = require('./routers/auth'); // Corrected import for auth router
-const authMiddleware = require('./Middleware/authMiddleware'); // Import authentication middleware
+const authRouter = require('./routers/auth');
 const api = process.env.API_URL;
 
-app.use(`${api}category`, authMiddleware, categoryRouter);
-app.use(`${api}brands`, authMiddleware, brandRouter);
-app.use(`${api}products`, authMiddleware, productRouter); 
-app.use(`${api}users`, authMiddleware, userRouter);
+app.use(`${api}category`, categoryRouter);
+app.use(`${api}brands`, brandRouter);
+app.use(`${api}products`,  productRouter); 
+app.use(`${api}users`, userRouter);
 app.use(`${api}auth`, authRouter);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
