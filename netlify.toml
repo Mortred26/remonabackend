@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "npm start"
   publish = "dist"
   timeout = 25  # Increase timeout limit to 25 minutes or higher if necessary
   
