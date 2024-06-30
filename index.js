@@ -32,8 +32,6 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Database connection
 mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
   dbName: 'furniture-store',
 })
   .then(() => {
@@ -42,7 +40,6 @@ mongoose.connect(process.env.MONGODB_URI, {
   .catch((err) => {
     console.error('Failed to connect to MongoDB:', err);
   });
-
 // Server
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
