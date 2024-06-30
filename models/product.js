@@ -29,7 +29,11 @@ const productSchema = new mongoose.Schema({
     ref: 'Brand',
     required: true,
   },
-  image: String 
+  image: String,
+  updateDate: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 const Product = mongoose.model('Product', productSchema);

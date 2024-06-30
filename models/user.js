@@ -28,6 +28,10 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'admin'],
     default: 'user',
   },
+  updateDate: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 // Generate JWT token for authentication
