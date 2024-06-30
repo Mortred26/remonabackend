@@ -25,4 +25,4 @@
   MONGODB_URI = "mongodb+srv://IamShadow:IamShadow26@cluster0.nvrqahb.mongodb.net/"
 
 [dev]
-  command = "npm run start"  # Development server start command if needed
+  command = "npm start"  # Development server start command if needed
