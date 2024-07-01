@@ -12,7 +12,7 @@ function generateTokens(user) {
   const accessToken = jwt.sign(
     { _id: user._id, name: user.name, email: user.email, role: user.role },
     process.env.JWT_PRIVATE_KEY,
-    { expiresIn: '50m' }
+    { expiresIn: '1d' }
   );
 
   const refreshToken = jwt.sign(
