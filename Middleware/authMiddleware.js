@@ -1,12 +1,11 @@
 const jwt = require('jsonwebtoken');
 const { Admin } = require('../models/admin');
 
-module.exports = async function(req, res, next) {
+module.exports = async function (req, res, next) {
   const accessToken = req.header('x-auth-token');
   if (!accessToken) return res.status(401).send('Access denied. No token provided or forbidden.');
 
-  try {
-    // Verify the access token
+  try {    // Verify the access token
     const decoded = jwt.verify(accessToken, process.env.JWT_PRIVATE_KEY);
     const admin = await Admin.findById(decoded._id);
     if (!admin || decoded.role !== 'admin') {
@@ -28,3 +27,4 @@ module.exports = async function(req, res, next) {
     }
   }
 };
+

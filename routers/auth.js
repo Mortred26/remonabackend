@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const { User, validateUser, validateLogin } = require('../models/user');
 const { Admin, validateAdmin } = require('../models/admin');
 const authMiddleware = require('../Middleware/authMiddleware'); // Import auth middleware
+const refreshMiddleware = require('../Middleware/refreshMiddleware'); // Import refresh middleware
 
 // Function to generate tokens
 function generateTokens(user) {
@@ -13,7 +14,7 @@ function generateTokens(user) {
     process.env.JWT_PRIVATE_KEY,
     { expiresIn: '50m' }
   );
-  
+
   const refreshToken = jwt.sign(
     { _id: user._id, name: user.name, email: user.email, role: user.role },
     process.env.JWT_REFRESH_KEY,
@@ -23,47 +24,67 @@ function generateTokens(user) {
   return { accessToken, refreshToken };
 }
 
+// Refresh token endpoint
+router.post('/refresh', refreshMiddleware, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId) || await Admin.findById(userId);
+
+    if (!user) return res.status(400).send('Invalid refresh token.');
+
+    const { accessToken, refreshToken } = generateTokens(user);
+
+    res.header('x-auth-token', accessToken).header('x-refresh-token', refreshToken).send({
+      accessToken,
+      refreshToken,
+    });
+  } catch (error) {
+    console.error('Error refreshing token:', error);
+    res.status(500).send('Error refreshing token.');
+  }
+});
+
 // Register a new user
 router.post('/register', async (req, res) => {
-    // Validate the request body
-    const { error } = validateUser(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
-  
-    try {
-      // Check if the user already exists
-      let user = await User.findOne({ email: req.body.email });
-      if (user) return res.status(400).send('User already registered.');
-  
-      // Create a new user instance
-      user = new User({
-        name: req.body.name,
-        email: req.body.email,
-        password: req.body.password,
-        role: 'user', // Set default role for regular users
-      });
-  
-      // Hash the password
-      const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(user.password, salt);
-  
-      // Save the user to the database
-      await user.save();
-  
-      // Generate tokens
-      const { accessToken, refreshToken } = generateTokens(user);
-  
-      // Send tokens in response headers and user details in the body
-      res.header('x-auth-token', accessToken).header('x-refresh-token', refreshToken).send({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      });
-    } catch (error) {
-      console.error('Error registering user:', error);
-      res.status(500).send('Error registering user.');
-    }
-  });
+  // Validate the request body
+  const { error } = validateUser(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  try {
+    // Check if the user already exists
+    let user = await User.findOne({ email: req.body.email });
+    if (user) return res.status(400).send('User already registered.');
+
+    // Create a new user instance
+    user = new User({
+      name: req.body.name,
+      email: req.body.email,
+      password: req.body.password,
+      role: 'user', // Set default role for regular users
+    });
+
+    // Hash the password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(user.password, salt);
+
+    // Save the user to the database
+    await user.save();
+
+    // Generate tokens
+    const { accessToken, refreshToken } = generateTokens(user);
+
+    // Send tokens in response headers and user details in the body
+    res.header('x-auth-token', accessToken).header('x-refresh-token', refreshToken).send({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    });
+  } catch (error) {
+    console.error('Error registering user:', error);
+    res.status(500).send('Error registering user.');
+  }
+});
 
 // Register a static admin (Example route, ensure it's protected)
 router.post('/register-admin', authMiddleware, async (req, res) => {
@@ -120,22 +141,15 @@ router.patch('/users/:id', authMiddleware, async (req, res) => {
 
     // Find the user by userId
     let user = await User.findById(id);
-    console.log(user);
     if (!user) return res.status(404).send('User not found.');
 
     // Update the user's role
     user.role = role;
     await user.save();
 
-    // Respond with updated user details
-    res.send({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    });
-
-    const admin = new Admin({
+    // Create new admin if the role is changed to admin
+    if (role === 'admin') {
+      const admin = new Admin({
         name: user.name,
         email: user.email,
         password: user.password,
@@ -147,9 +161,15 @@ router.patch('/users/:id', authMiddleware, async (req, res) => {
 
       // Delete the user from the User collection
       await User.findByIdAndDelete(id);
+    }
 
-      
-
+    // Respond with updated user details
+    res.send({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    });
 
   } catch (error) {
     console.error('Error updating user role:', error);
