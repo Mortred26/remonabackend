@@ -5,19 +5,28 @@ const { body, validationResult } = require('express-validator');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const auth = require('../Middleware/authMiddleware'); // Import authentication middleware
 const authMiddleware = require('../Middleware/authMiddleware');
+
 // Multer configuration for image upload
-const upload = multer({
-  dest: 'uploads/', // Destination folder for uploaded files
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  },
 });
+const upload = multer({ storage: storage });
+
+// Middleware to serve static files
+router.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Create a new category with an optional image upload
 router.post(
   '/',
-  authMiddleware, // Add authentication middleware
+  authMiddleware,
   upload.single('image'),
-  body('name').custom(async (value, { req }) => {
+  body('name').custom(async (value) => {
     const existingCategory = await Category.findOne({
       name: { $regex: new RegExp('^' + value + '$', 'i') },
     });
@@ -28,7 +37,6 @@ router.post(
   }),
   async (req, res) => {
     try {
-      // Ensure that the user is authenticated and has admin rights
       if (!req.user || req.user.role !== 'admin') {
         return res.status(403).send('Access denied. Admin access required.');
       }
@@ -39,7 +47,20 @@ router.post(
       }
 
       const { name } = req.body;
-      const imagePath = req.file ? req.file.path : null;
+      let imagePath = null;
+
+      if (req.file) {
+        const relativePath = `uploads/${req.file.originalname}`;
+        const fullPath = path.join(__dirname, '../', relativePath);
+        if (fs.existsSync(fullPath)) {
+          // Use existing image if it already exists
+          imagePath = relativePath;
+        } else {
+          // Save new image
+          imagePath = relativePath;
+          fs.renameSync(req.file.path, fullPath); // Move file to the correct location
+        }
+      }
 
       const category = new Category({ name, image: imagePath });
       await category.save();
@@ -80,34 +101,48 @@ router.get('/:id', async (req, res) => {
 // Update a category by ID, with optional image update
 router.put('/:id', authMiddleware, upload.single('image'), async (req, res) => {
   try {
-    // Ensure that the user is authenticated and has admin rights
     if (!req.user || req.user.role !== 'admin') {
       return res.status(403).send('Access denied. Admin access required.');
     }
 
     const { name } = req.body;
-    const imagePath = req.file ? req.file.path : null;
+    let imagePath = null;
 
-    const updatedCategory = await Category.findByIdAndUpdate(
-      req.params.id,
-      { name, image: imagePath },
-      { new: true }
-    );
-
-    if (!updatedCategory) {
+    // Find the existing category
+    const category = await Category.findById(req.params.id);
+    if (!category) {
       return res.status(404).send('Category not found');
     }
 
-    // If a new image is uploaded, delete the old image
-    if (imagePath && updatedCategory.image) {
-      fs.unlink(path.join(__dirname, '..', updatedCategory.image), (err) => {
-        if (err) {
-          console.error('Error deleting old image:', err);
+    if (req.file) {
+      const relativePath = `uploads/${req.file.originalname}`;
+      const fullPath = path.join(__dirname, '../', relativePath);
+      if (fs.existsSync(fullPath)) {
+        // Use existing image if it already exists
+        imagePath = relativePath;
+      } else {
+        // Save new image
+        imagePath = relativePath;
+        fs.renameSync(req.file.path, fullPath); // Move file to the correct location
+
+        // Delete the old image if a new one is uploaded
+        if (category.image) {
+          const oldImagePath = path.join(__dirname, '../', category.image);
+          fs.unlink(oldImagePath, (err) => {
+            if (err) {
+              console.error('Error deleting old image:', err);
+            }
+          });
         }
-      });
+      }
     }
 
-    res.status(200).json(updatedCategory);
+    // Update the category with new values
+    category.name = name || category.name;
+    category.image = imagePath || category.image;
+    await category.save();
+
+    res.status(200).json(category);
   } catch (error) {
     res.status(400).send(error);
   }
@@ -116,7 +151,6 @@ router.put('/:id', authMiddleware, upload.single('image'), async (req, res) => {
 // Delete a category by ID
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
-    // Ensure that the user is authenticated and has admin rights
     if (!req.user || req.user.role !== 'admin') {
       return res.status(403).send('Access denied. Admin access required.');
     }
@@ -127,9 +161,9 @@ router.delete('/:id', authMiddleware, async (req, res) => {
       return res.status(404).send('Category not found');
     }
 
-    // Delete the associated image if it exists
     if (deletedCategory.image) {
-      fs.unlink(path.join(__dirname, '..', deletedCategory.image), (err) => {
+      const oldImagePath = path.join(__dirname, '../', deletedCategory.image);
+      fs.unlink(oldImagePath, (err) => {
         if (err) {
           console.error('Error deleting image:', err);
         }
