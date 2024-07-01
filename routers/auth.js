@@ -25,7 +25,7 @@ function generateTokens(user) {
 }
 
 // Refresh token endpoint
-router.post('/refresh', refreshMiddleware, async (req, res) => {
+router.post('/refresh', async (req, res) => {
   try {
     const userId = req.user._id;
     const user = await User.findById(userId) || await Admin.findById(userId);
@@ -34,7 +34,7 @@ router.post('/refresh', refreshMiddleware, async (req, res) => {
 
     const { accessToken, refreshToken } = generateTokens(user);
 
-    res.header('x-auth-token', accessToken).header('x-refresh-token', refreshToken).send({
+    res.header('Authorization', `Bearer ${accessToken}`).send({
       accessToken,
       refreshToken,
     });
@@ -189,8 +189,6 @@ router.get('/admin/users', authMiddleware, async (req, res) => {
     res.status(500).send('Error fetching users.');
   }
 });
-
-// User login
 router.post('/login', async (req, res) => {
   try {
     let user = await Admin.findOne({ email: req.body.email });
@@ -208,13 +206,13 @@ router.post('/login', async (req, res) => {
 
     const { accessToken, refreshToken } = generateTokens(user);
 
-    res.header('x-auth-token', accessToken).header('x-refresh-token', refreshToken).send({
+    res.header('Authorization', `Bearer ${accessToken}`).send({
       _id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
-      accessToken: accessToken,
-      refreshToken: refreshToken
+      accessToken,
+      refreshToken
     });
   } catch (error) {
     console.error('Error during login:', error);
