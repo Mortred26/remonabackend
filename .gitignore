@@ -77,3 +77,7 @@ jspm_packages/
 # Windows files
 Thumbs.db
 ehthumbs.db
+.vercel
+
+# Local Netlify folder
+.netlify
