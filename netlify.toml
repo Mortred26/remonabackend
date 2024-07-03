@@ -13,10 +13,3 @@
   from = "/*"
   to = "/index.html"
   status = 200
-
-[build.environment]
-  PORT = "5000"
-  API_URL = "/api/v1/"
-  JWT_PRIVATE_KEY = "IamShadow"
-  JWT_REFRESH_KEY = "Hayabusa"
-  MONGODB_URI = "mongodb+srv://IamShadow:IamShadow26@cluster0.nvrqahb.mongodb.net/"
