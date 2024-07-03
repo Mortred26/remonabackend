@@ -1,9 +1,7 @@
 [build]
   command = "CI= npm run build"
   publish = "build"
-  environment = { 
-    NODE_ENV = "production" 
-  }
+  environment = "NODE_ENV=production"
 
 [functions]
   directory = "functions"
@@ -22,4 +20,3 @@
   JWT_PRIVATE_KEY = "IamShadow"
   JWT_REFRESH_KEY = "Hayabusa"
   MONGODB_URI = "mongodb+srv://IamShadow:IamShadow26@cluster0.nvrqahb.mongodb.net/"
-  
